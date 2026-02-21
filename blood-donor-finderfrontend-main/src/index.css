@@ -44,12 +44,15 @@
     --sidebar-border: 0 0% 16%;
     --sidebar-ring: 0 72% 51%;
 
-    /* Custom tokens */
-    --gradient-hero: linear-gradient(135deg, hsl(0 72% 51% / 0.15), hsl(0 0% 4%));
-    --gradient-card: linear-gradient(180deg, hsl(0 0% 10%), hsl(0 0% 6%));
+    /* Custom tokens - iOS Glassmorphism Update */
+    --gradient-hero: transparent;
+    --gradient-card: rgba(255, 255, 255, 0.03);
     --gradient-accent: linear-gradient(135deg, hsl(0 72% 51%), hsl(0 84% 40%));
-    --shadow-glow: 0 0 40px hsl(0 72% 51% / 0.2);
-    --shadow-card: 0 4px 24px hsl(0 0% 0% / 0.4);
+    --shadow-glow: 0 0 40px hsl(0 72% 51% / 0.15);
+    --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.4);
+
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-border-light: rgba(255, 255, 255, 0.15);
   }
 }
 
@@ -58,26 +61,107 @@
     @apply border-border;
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply bg-background text-foreground;
     font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: 'Space Grotesk', system-ui, sans-serif;
   }
 }
 
 @layer components {
+
+  /* Premium iOS Glass Card */
   .glass-card {
     background: var(--gradient-card);
-    border: 1px solid hsl(0 0% 16%);
+    backdrop-filter: blur(32px) saturate(180%);
+    -webkit-backdrop-filter: blur(32px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    border-top: 1px solid var(--glass-border-light);
+    border-left: 1px solid var(--glass-border-light);
     box-shadow: var(--shadow-card);
+    transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
+      box-shadow 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
+      border-color 0.4s ease;
+    will-change: transform;
+  }
+
+  .glass-card:hover {
+    transform: translateY(-4px) scale(1.01);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+    border-top: 1px solid rgba(255, 255, 255, 0.25);
+    border-left: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  /* Thin floating nav bar glass */
+  .glass-nav {
+    background: rgba(10, 10, 10, 0.65);
+    backdrop-filter: blur(48px) saturate(200%);
+    -webkit-backdrop-filter: blur(48px) saturate(200%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  /* Ambient iOS-style Background Blobs */
+  .ambient-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: 0.5;
+    z-index: -1;
+    pointer-events: none;
+    animation: drift 20s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .ambient-blob-1 {
+    background: radial-gradient(circle, hsl(0 80% 50%) 0%, transparent 70%);
+    width: 600px;
+    height: 600px;
+    top: -100px;
+    left: -100px;
+    animation-delay: 0s;
+  }
+
+  .ambient-blob-2 {
+    background: radial-gradient(circle, hsl(280 80% 40%) 0%, transparent 70%);
+    width: 500px;
+    height: 500px;
+    top: 20%;
+    right: -50px;
+    animation-delay: -5s;
+  }
+
+  .ambient-blob-3 {
+    background: radial-gradient(circle, hsl(320 80% 40%) 0%, transparent 70%);
+    width: 400px;
+    height: 400px;
+    bottom: -100px;
+    left: 20%;
+    animation-delay: -10s;
   }
 
   .glow-border {
     border: 1px solid hsl(0 72% 51% / 0.3);
     box-shadow: var(--shadow-glow);
+    transition: box-shadow 0.4s ease, border-color 0.4s ease;
+  }
+
+  .glow-border:hover {
+    border-color: hsl(0 72% 51% / 0.6);
+    box-shadow: 0 0 60px hsl(0 72% 51% / 0.35);
   }
 
   .text-gradient {
@@ -88,6 +172,67 @@
   }
 
   .hero-bg {
-    background: var(--gradient-hero);
+    background: transparent;
+  }
+
+  /* Floating badge animation */
+  .float-badge {
+    animation: float 4s ease-in-out infinite;
+  }
+}
+
+@keyframes drift {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+/* Respect reduced-motion preference */
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

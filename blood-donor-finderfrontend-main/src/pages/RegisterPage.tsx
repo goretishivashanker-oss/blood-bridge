@@ -40,12 +40,18 @@ const RegisterPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.bloodType) {
+      toast({ title: "Error", description: "Please select a Blood Group.", variant: "destructive" });
+      return;
+    }
+
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/donors`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
+
       if (response.ok) {
         setSubmitted(true);
         toast({
@@ -53,10 +59,13 @@ const RegisterPage = () => {
           description: "Thank you for registering as a blood donor.",
         });
       } else {
-        toast({ title: "Error", description: "Failed to register donor.", variant: "destructive" });
+        const errorData = await response.json();
+        toast({ title: "Error", description: errorData.error || "Failed to register donor.", variant: "destructive" });
+        console.error("Backend error:", errorData);
       }
     } catch (error) {
-      toast({ title: "Error", description: "Network error occurred.", variant: "destructive" });
+      toast({ title: "Error", description: "Network error. Make sure the backend is running and reachable.", variant: "destructive" });
+      console.error("Fetch error:", error);
     }
   };
 
@@ -94,76 +103,79 @@ const RegisterPage = () => {
             <p className="text-muted-foreground text-lg mb-8">Register your profile to help save lives in emergencies</p>
           </motion.div>
 
-          <motion.form
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="glass-card rounded-xl p-8 space-y-6"
-            onSubmit={handleSubmit}
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <User className="w-4 h-4 text-primary" /> Full Name
-                </Label>
-                <Input placeholder="Enter your full name" className="bg-background border-border" required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
+            <form
+              className="glass-card rounded-3xl p-8 space-y-6"
+              onSubmit={handleSubmit}
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <User className="w-4 h-4 text-primary" /> Full Name
+                  </Label>
+                  <Input placeholder="Enter your full name" className="bg-background border-border" required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <Droplet className="w-4 h-4 text-primary" /> Blood Group
+                  </Label>
+                  <Select required value={formData.bloodType} onValueChange={(val) => setFormData({ ...formData, bloodType: val })}>
+                    <SelectTrigger className="bg-background border-border">
+                      <SelectValue placeholder="Select blood group" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {bloodTypes.map((type) => (
+                        <SelectItem key={type} value={type}>{type}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <Phone className="w-4 h-4 text-primary" /> Contact Number
+                  </Label>
+                  <Input placeholder="+91 XXXXX XXXXX" className="bg-background border-border" required value={formData.contact} onChange={(e) => setFormData({ ...formData, contact: e.target.value })} />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-primary" /> City / Location
+                  </Label>
+                  <Input placeholder="Enter your city" className="bg-background border-border" required value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-primary" /> Last Donation Date
+                  </Label>
+                  <Input type="date" className="bg-background border-border" value={formData.lastDonation} onChange={(e) => setFormData({ ...formData, lastDonation: e.target.value })} />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">Age</Label>
+                  <Input type="number" placeholder="Enter your age" min="18" max="65" className="bg-background border-border" required value={formData.age} onChange={(e) => setFormData({ ...formData, age: e.target.value })} />
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <Droplet className="w-4 h-4 text-primary" /> Blood Group
-                </Label>
-                <Select required value={formData.bloodType} onValueChange={(val) => setFormData({ ...formData, bloodType: val })}>
-                  <SelectTrigger className="bg-background border-border">
-                    <SelectValue placeholder="Select blood group" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {bloodTypes.map((type) => (
-                      <SelectItem key={type} value={type}>{type}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="flex items-center justify-between p-4 rounded-lg bg-background border border-border">
+                <div>
+                  <p className="font-medium">Available for Donation</p>
+                  <p className="text-sm text-muted-foreground">Toggle on when you're available to donate</p>
+                </div>
+                <Switch checked={formData.available} onCheckedChange={(val) => setFormData({ ...formData, available: val })} />
               </div>
 
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <Phone className="w-4 h-4 text-primary" /> Contact Number
-                </Label>
-                <Input placeholder="+91 XXXXX XXXXX" className="bg-background border-border" required value={formData.contact} onChange={(e) => setFormData({ ...formData, contact: e.target.value })} />
-              </div>
-
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-primary" /> City / Location
-                </Label>
-                <Input placeholder="Enter your city" className="bg-background border-border" required value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} />
-              </div>
-
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-primary" /> Last Donation Date
-                </Label>
-                <Input type="date" className="bg-background border-border" value={formData.lastDonation} onChange={(e) => setFormData({ ...formData, lastDonation: e.target.value })} />
-              </div>
-
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">Age</Label>
-                <Input type="number" placeholder="Enter your age" min="18" max="65" className="bg-background border-border" required value={formData.age} onChange={(e) => setFormData({ ...formData, age: e.target.value })} />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between p-4 rounded-lg bg-background border border-border">
-              <div>
-                <p className="font-medium">Available for Donation</p>
-                <p className="text-sm text-muted-foreground">Toggle on when you're available to donate</p>
-              </div>
-              <Switch checked={formData.available} onCheckedChange={(val) => setFormData({ ...formData, available: val })} />
-            </div>
-
-            <Button type="submit" variant="hero" size="lg" className="w-full text-base py-6">
-              Register as Donor
-            </Button>
-          </motion.form>
+              <Button type="submit" variant="hero" size="lg" className="w-full text-base py-6">
+                Register as Donor
+              </Button>
+            </form>
+          </motion.div>
         </div>
       </div>
     </div>

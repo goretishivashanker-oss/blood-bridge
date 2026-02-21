@@ -2,25 +2,31 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const donorRoutes = require("./routes/donorRoutes");
+const { seedIfEmpty } = require("./config/db");
+
+const path = require("path");
 
 const app = express();
 const port = process.env.PORT || 5000;
 const frontendUrl = process.env.FRONTEND_URL || "http://localhost:8080";
 
-// Middleware
-app.use(cors({ origin: frontendUrl }));
+app.use(cors({ origin: "*" }));
 app.use(express.json());
-
-// Main Routes
 app.use("/api/donors", donorRoutes);
 
-// Fallback Route
-app.use((req, res) => {
-    res.status(404).json({ error: "Endpoint not found" });
+// Serve the compiled frontend static files
+const frontendDistPath = path.join(__dirname, "../blood-donor-finderfrontend-main/dist");
+app.use(express.static(frontendDistPath));
+
+// Handle React routing, return all requests to React app
+app.get("*", (req, res) => {
+    res.sendFile(path.join(frontendDistPath, "index.html"));
 });
 
-// Start server
-app.listen(port, () => {
-    console.log(`Blood Bridge Secure API is running on http://localhost:${port}`);
-    console.log(`Accepting requests only from: ${frontendUrl}`);
+
+
+app.listen(port, async () => {
+    console.log(`Blood Bridge API running on http://localhost:${port}`);
+    console.log(`Accepting requests from: ${frontendUrl}`);
+    await seedIfEmpty();
 });
